@@ -29,6 +29,12 @@
 
 using namespace std;
 
+struct CompareDistance {
+    bool operator()(pair<int,int> lhs, pair<int,int> rhs) {
+        return lhs.second > rhs.second; 
+    }
+};
+
 // Graph representation using adjacency list
 class Graph {
 private:
@@ -54,7 +60,60 @@ public:
         // 2. Create arrays for distances and for tracking the path
         // 3. Initialize all distances as INFINITE and src distance as 0
         // 4. Process vertices in order of their distance from src
-        // 5. Reconstruct and print the shortest path from src to dest
+        priority_queue<pair<int,int>, vector<pair<int,int>>, CompareDistance> pq;
+        vector<bool> visited(V, 0);
+        vector<int> cost(V, INT32_MAX);
+        vector<int> path(V, -1);
+        stack<int> result_path;
+        pq.push(make_pair(src, 0));
+        cost[src] = 0;
+
+        while ( visited[dest] == 0 && pq.size() > 0 ) {
+            auto cur = pq.top();
+            pq.pop();
+            visited[cur.first] = true;
+            // cout << "cur:" << cur.first << endl;
+
+            for ( auto ni : adj[cur.first] ) {
+                if ( visited[ni.first] ) continue;
+
+                if ( cost[ni.first] > cost[cur.first] + ni.second ) {
+                    cost[ni.first] = cost[cur.first] + ni.second;
+                    path[ni.first] = cur.first;
+                    pq.push(make_pair(ni.first, cost[ni.first]));
+                    // current method would cause duplicate nodes in pqueue,
+                    // to improve is to use set<pair<int,int>>, since st.begin() is the smallest
+                    // cout << "add neighbor: " << ni.first << "<>" << cost[ni.first] << endl;
+                }
+            }
+        }
+
+        if ( visited[dest] == 0 ) {
+            cout << "no path exists\n";
+            return;
+        }
+
+
+        for ( int it = dest; it != src; it = path[it] ) {
+            result_path.push(it); 
+        }
+        result_path.push(src);
+
+
+        cout << "Shortest travel time: " << cost[dest] << " hours\n";
+
+        cout << "Path: ";
+
+        cout << result_path.top();
+        result_path.pop();
+        while ( !result_path.empty() ) {
+            int cur = result_path.top();
+            result_path.pop();
+            cout << " -> " << cur;
+        }
+        cout << endl;
+
+
     }
 };
 
