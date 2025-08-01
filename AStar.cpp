@@ -31,6 +31,13 @@
 
 using namespace std;
 
+// Comparator for priority queue to make it a min-heap
+struct CompareF {
+    bool operator()(pair<int,int> lhs, pair<int,int> rhs) {
+        return lhs.first > rhs.first; // Compare f-scores, smaller f-score has higher priority
+    }
+};
+
 // Graph representation using adjacency list
 class Graph {
 private:
@@ -65,6 +72,52 @@ public:
         // 3. Initialize all g_scores as INFINITE and src g_score as 0
         // 4. Process vertices in order of their f_score (not just distance)
         // 5. Reconstruct and print the shortest path from src to dest
+        priority_queue<pair<int,int>, vector<pair<int,int>>, CompareF> pq;
+        vector<int> f_score(V, INT32_MAX);
+        vector<int> g_score(V, INT32_MAX);
+        vector<bool> visited(V, false);
+        vector<int> path(V, -1);
+        g_score[src] = 0;
+        f_score[src] = heuristic[src];
+        pq.push(make_pair(f_score[src], src));
+        while ( !pq.empty() ) {
+            int cur = pq.top().second;
+            if ( cur == dest ) break;
+            pq.pop();
+            for ( auto[nd, weight] : adj[cur] ) {
+                if ( g_score[nd] > g_score[cur] + weight ) {
+                    g_score[nd] = g_score[cur] + weight;
+                    path[nd] = cur;
+                }
+                if ( f_score[nd] > g_score[nd] + heuristic[nd] ) {
+                    f_score[nd] = g_score[nd] + heuristic[nd];
+                    pq.push(make_pair(f_score[nd], nd));
+                }
+            }
+        }
+        if ( path[dest] == -1 ) {
+            cout << "cannot find path\n";
+            return;
+        }
+        stack<int> result;
+        int cur = dest;
+        while ( 1 ) {
+            result.push(cur);
+            if ( cur == src ) break;
+            cur = path[cur];
+        }
+        cout << "Shortest travel time: " << g_score[dest] << " hours\n";
+        cout << "Path: ";
+
+        cout << result.top();
+        result.pop();
+        while ( !result.empty() ) {
+            int cur = result.top();
+            result.pop();
+            cout << " -> " << cur;
+        }
+        cout << endl;
+
     }
 };
 
